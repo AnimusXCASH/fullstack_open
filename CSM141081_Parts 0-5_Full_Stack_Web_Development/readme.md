@@ -9,11 +9,14 @@
 - https://www.youtube.com/playlist?list=PLlasXeu85E9cQ32gLCvAvr9vNaUccPVNP
 - https://egghead.io/courses/react-with-class-components-fundamentals-4351f8bb
 - https://egghead.io/courses/the-beginner-s-guide-to-react
+- https://github.com/getify/You-Dont-Know-JS/tree/1st-ed
+
+- https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors 
 
 ### installing react applcation through vite 
 
 ```cmd
-npm create vite@latest part1 --template react
+npm create vite@latest part --template react
 cd part1
 npm install
 ```
@@ -77,3 +80,27 @@ or
 ```
 
 ### handling arrays 
+
+```js
+
+const array = [{name:'funny', id:12}]
+
+
+// Find in array 
+const note = array.find(n=> n.id===id)
+
+// map array 
+notes.map(note => note.id !== id ? note : response.data)
+```
+
+### Creating new objects 
+
+```js
+const changedNote = { ...note, important: !note.important }
+```
+
+### Removing from list 
+
+```js
+notes.filter(n => n.id !== id)
+```
