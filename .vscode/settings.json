@@ -1,3 +1,7 @@
 {
-    
+  "configurations":[
+    {
+      "envFile":"/CSM141081_Parts_0_5_Full_Stack_Web_Development/part4/blog/.env"
+    }
+  ]
 }
