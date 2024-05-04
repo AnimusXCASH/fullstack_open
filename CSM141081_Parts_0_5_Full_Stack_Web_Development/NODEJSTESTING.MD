@@ -4,6 +4,27 @@
 
 ```npm install --save-dev jest```
 
+```npm install --save-dev supertest```
+
+
+## Creating multiple environments support
+
+```js
+const MONGODB_URI = process.env.NODE_ENV === 'test' 
+  ? process.env.TEST_MONGODB_URI
+  : process.env.MONGODB_URI
+
+```
+
+```
+    "start": "cross-env NODE_ENV=production node index.js",
+    "dev": "cross-env NODE_ENV=development nodemon index.js",
+    "test": "cross-env  NODE_ENV=test node --test",
+    "lint": "eslint ."
+```
+
+
+
 ## define test script 
 
 ```
@@ -31,4 +52,4 @@ revers.test.js
 
 ```npm test -- -t 'when list has only one blog, equals the likes of that'```
 
-ostal Exercises 4.3.-4.7.
+
