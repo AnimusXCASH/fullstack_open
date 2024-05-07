@@ -11,120 +11,62 @@ const jwt = require('jsonwebtoken')
 const api = supertest(app)
 
 const blogs = [
-  {
-    title: 'Blog to update',
-    author: 'Animus',
-    url: 'https://www.example.com/new-blog',
-    likes: 0
-  },
-  {
-    title: 'Blog to update 2',
-    author: 'Animus',
-    url: 'https://www.example.com/new-blog',
-    likes: 10
-  }
-  // {
-  //   _id: "5a422a851b54a676234d17f7",
-  //   title: "React patterns",
-  //   author: "Michael Chan",
-  //   url: "https://reactpatterns.com/",
-  //   likes: 7,
-  //   __v: 0
-  // },
-  // {
-  //   _id: "5a422aa71b54a676234d17f8",
-  //   title: "Go To Statement Considered Harmful",
-  //   author: "Edsger W. Dijkstra",
-  //   url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-  //   likes: 5,
-  //   __v: 0
-  // },
-  // {
-  //   _id: "5a422b3a1b54a676234d17f9",
-  //   title: "Canonical string reduction",
-  //   author: "Edsger W. Dijkstra",
-  //   url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
-  //   likes: 12,
-  //   __v: 0
-  // },
-  // {
-  //   _id: "5a422b891b54a676234d17fa",
-  //   title: "First class tests",
-  //   author: "Robert C. Martin",
-  //   url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
-  //   likes: 10,
-  //   __v: 0
-  // },
-  // {
-  //   _id: "5a422ba71b54a676234d17fb",
-  //   title: "TDD harms architecture",
-  //   author: "Robert C. Martin",
-  //   url: "http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html",
-  //   likes: 0,
-  //   __v: 0
-  // },
-  // {
-  //   _id: "5a422bc61b54a676234d17fc",
-  //   title: "Type wars",
-  //   author: "Robert C. Martin",
-  //   url: "http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html",
-  //   likes: 2,
-  //   __v: 0
-  // }
-]
+  { title: 'Blog to update', author: 'Animus', url: 'https://www.example.com/new-blog', likes: 0 },
+  { title: 'Blog to update 2', author: 'Animus', url: 'https://www.example.com/new-blog', likes: 10 }
+];
 
 let token;
 
 describe('Testing the blog functionality', () => {
   beforeEach(async () => {
-    await User.deleteMany({});
     await Blogs.deleteMany({});
-    await Blogs.insertMany(blogs)
-    const passwordHash = await bcrypt.hash('testpassword', 10);
+    await Blogs.insertMany(blogs);
+
+    // User setup
+    const passwordHash = await bcrypt.hash('userSecret', 10);
     const user = new User({
-      username: 'testuser',
-      name: 'Test User',
+      _id: '662daae10d4c31cad668c2a3',
+      username: 'UserRoot',
+      name: 'animusTest',
       passwordHash
     });
-    await user.save();
 
-    const response = await api.post('/api/login').send({
-      username: 'testuser',
-      password: 'testpassword'
-    });
-    token = response.body.token;
+    // Token generation
+    const userForToken = {
+      username: user.username,
+      id: user._id.toString()
+    };
+    token = jwt.sign(userForToken, process.env.SECRET, { expiresIn: '1h' });
+  });
 
-  })
-
-  // // 4.9
-  test('HTTP Get request to check unique identifier property of the blog post is id ', async () => {
-    const response = await api.get('/api/blogs').set('Authorization', `Bearer ${token}`);
-    assert.ok(response.body.every(blog => blog.id && !blog._id), 'Every blog post should have an id propert and not _id default by mongo')
-  })
+  // Example test to check if the blog posts have unique identifier 'id'
+  test('HTTP Get request to check unique identifier property of the blog post is id', async () => {
+    const response = await api.get('/api/blogs').set('Authorization', `Bearer ${token}`)
+    assert.ok(response.body.every(blog => blog.id && !blog._id), 'Every blog post should have an "id" property and not "_id" default by Mongo');
+  });
 
   // 4.10
   test('HTTP Get request to check correct amount of blog entries returned', async () => {
     const response = await api.get('/api/blogs').set('Authorization', `Bearer ${token}`);
-    console.log(response.body)
     assert.strictEqual(response.body.length, blogs.length, 'The number of blogs returned should match the number of blogs inserted');
   });
 
   // 4.11 
   test('Http post default likes to 0 if missing', async () => {
+
     const newBlog = {
       title: "Likes missing",
       author: "Animus",
       url: "https://www.animus.com/",
     }
 
-    await api.post('/api/blogs').set('Authorization', `Bearer ${token}`).send(newBlog).expect(201).expect('Content-Type', /application\/json/);
+    const newBlogResponse = await api.post('/api/blogs').set('Authorization', `Bearer ${token}`).send(newBlog).expect(201).expect('Content-Type', /application\/json/);
 
     // get the blog to check the likes 
     const response = await api.get('/api/blogs').set('Authorization', `Bearer ${token}`);
     const addedBlog = response.body.find(blog => blog.title === newBlog.title);
     assert.strictEqual(addedBlog.likes, 0, "Likes should default to 0")
   })
-
 
 
   test('HTTP post request to create new blog post', async () => {
@@ -194,19 +136,22 @@ describe('Testing the blog functionality', () => {
   });
 
   // 4.13 
+
   test('HTTP delete request for blog to be deleted', async () => {
+
     const newBlog = {
       title: "Test Blog for Deletion",
       url: "https://example.com",
       likes: 1
     };
 
-    // Create blog post
+    // // Create blog post
     const createResponse = await api.post('/api/blogs').set('Authorization', `Bearer ${token}`).send(newBlog).expect(201).expect('Content-Type', /application\/json/);
+
     const createdBlogId = createResponse.body.id;
 
     // // Delete the created blog
-    await api.delete(`/api/blogs/${createdBlogId}`).set('Authorization', `Bearer ${token}`).expect(204);
+    const response = await api.delete(`/api/blogs/${createdBlogId}`).set('Authorization', `Bearer ${token}`).expect(204);
 
     const getResponse = await api.get('/api/blogs').set('Authorization', `Bearer ${token}`).expect(200);
     assert.strictEqual(getResponse.body.find(blog => blog._id === createdBlogId), undefined, 'Deleted blog should not be found');
@@ -230,10 +175,7 @@ describe('Testing the blog functionality', () => {
       likes: 10
     }
 
-    const updateResponse = await api.put(`/api/blogs/${createdBlogId}`)
-      .set('Authorization', `Bearer ${token}`)
-      .send(updatedBlogData)
-      .expect(200);
+    const updateResponse = await api.put(`/api/blogs/${createdBlogId}`).set('Authorization', `Bearer ${token}`).send(updatedBlogData).expect(200);
 
     assert.strictEqual(updateResponse.status, 200, 'Should return status 200');
     assert.strictEqual(updateResponse.body.likes, 10, 'Likes should be updated to 10');

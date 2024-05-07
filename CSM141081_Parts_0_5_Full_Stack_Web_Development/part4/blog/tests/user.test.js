@@ -13,8 +13,12 @@ const api = supertest(app);
 describe('when there is initialy one user in db', () => {
   beforeEach(async () => {
     await User.deleteMany({})
-    const passwordHash = await bcrypt.hash('sekret', 10)
-    const user = new User({ username: 'root', name: 'rootname', passwordHash, blogs: [] })
+
+    const rootUserId = new mongoose.Types.ObjectId('662daae10d4c31cad668c2a3')
+
+    const passwordHash = await bcrypt.hash('userSecret', 10)
+    const user = new User({ name: 'animusTest', username: 'UserRoot', passwordHash, _id: rootUserId })
+
     await user.save()
   })
 
@@ -24,10 +28,8 @@ describe('when there is initialy one user in db', () => {
     assert(Array.isArray(response.body), "Response body should be an array");
   });
 
-  
 
   test('HTTP Post user creation with fresh username success', async () => {
-    console.log("HTTP Post user creation with fresh username success")
     const usersAtStart = await helper.usersInDb()
 
     const newUser = {
@@ -37,9 +39,7 @@ describe('when there is initialy one user in db', () => {
     }
 
     await api.post('/api/users').send(newUser).expect(201).expect('Content-Type', /application\/json/)
-
     const usersAtEnd = await helper.usersInDb()
-
     assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1)
 
     const usernames = usersAtEnd.map(u => u.username)
@@ -50,9 +50,9 @@ describe('when there is initialy one user in db', () => {
     const usersAtStart = await helper.usersInDb()
 
     const newUser = {
-      username: 'root',
-      name: 'Superuser',
-      password: 'salainen',
+      username: 'UserRoot',
+      name: 'animusTest',
+      password: 'userSecret',
     }
 
     const result = await api.post('/api/users').send(newUser).expect(400).expect('Content-Type', /application\/json/)
@@ -62,7 +62,7 @@ describe('when there is initialy one user in db', () => {
     assert.strictEqual(usersAtEnd.length, usersAtStart.length, 'Number of users stored unchanged')
   })
 
-  // // Test 16
+  // // // Test 16
 
   test('creation fails if the username or password is missing', async () => {
     const newUser = {
@@ -85,6 +85,7 @@ describe('when there is initialy one user in db', () => {
   })
 
 })
+
 
 // Required to closec onneciton everytime
 after(async () => {

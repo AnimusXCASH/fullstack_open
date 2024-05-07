@@ -11,6 +11,11 @@ blogsRouter.get('/', async (request, response) => {
 
 // Updated with 4.19
 blogsRouter.post('/', async (request, response) => {
+  
+  if (!request.user) {
+    return response.status(403).send({ error: 'You must be logged in to post blogs' });
+  }
+
   const { title, url } = request.body;
 
   if (!title || !url) {
@@ -20,7 +25,7 @@ blogsRouter.post('/', async (request, response) => {
   const blog = new Blog({
     title,
     url,
-    author: request.user.name,
+    author: request.user.username,
     likes: request.body.likes || 0,
   });
 
@@ -39,7 +44,7 @@ blogsRouter.delete('/:id', async (request, response) => {
       return response.status(404).json({ error: 'blog not found' });
     }
 
-    if (blog.author !== request.user.name) {
+    if (blog.author !== request.user.username) {
       return response.status(403).json({ error: 'only the creator can delete this blog' });
     }
 
@@ -57,7 +62,7 @@ blogsRouter.put('/:id', async (request, response, next) => {
     return response.status(404).json({ error: 'blog not found' });
   }
 
-  if (blog.author !== request.user.name) {
+  if (blog.author !== request.user.username) {
     return response.status(403).json({ error: 'only the creator can delete this blog' });
   }
 

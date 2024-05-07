@@ -7,7 +7,6 @@ if (result.error) {
 
 const PORT = process.env.PORT
 
-// identify for different modes access to db
 const MONGODB_URI = process.env.NODE_ENV === 'test' 
   ? process.env.TEST_MONGODB_URI
   : process.env.MONGODB_URI
